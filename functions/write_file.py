@@ -21,20 +21,20 @@ def write_file(working_directory, file_path, content):
         
            
 
-        print(F"FILE PATH - {file_path}")    
+        #print(F"FILE PATH - {file_path}")    
         print(f"WORKING DIR - {working_dir_abs}")
-        print(F"TARGET FILE PATH - {target_file_path}")
-        print(F"VALID FILE PATH - {valid_file_path}")
+        #print(F"TARGET FILE PATH - {target_file_path}")
+        #print(F"VALID FILE PATH - {valid_file_path}")
         print(F"PARENT DIR NAME - {parent_dir_name}")
         
 
 
-        if os.makedirs(parent_dir_name,exist_ok=True) == None:
+        os.makedirs(parent_dir_name,exist_ok=True)
 
-            with open(target_file_path, "w") as f:
-                f.write(content)
-                
-                return f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
+        with open(target_file_path, "w") as f:
+            f.write(content)
+            
+        return f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
 
         
 

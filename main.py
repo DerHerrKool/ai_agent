@@ -1,45 +1,57 @@
 import os
 import argparse
 from dotenv import load_dotenv
+from prompts import system_prompt
 
 from google import genai
 from google.genai import types
 
 
-load_dotenv()
-api_key = os.environ.get("GEMINI_API_KEY")
-
-if api_key is None:
-    raise RuntimeError ("There is no API key")
-
-
-client = genai.Client(api_key=api_key)
-
-parser = argparse.ArgumentParser(description="Chatbot")
-parser.add_argument("user_prompt", type=str, help="User prompt")
-parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
-args = parser.parse_args()
-
-user_prompt = args.user_prompt
-
-messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
-
-response = client.models.generate_content(
-    model="gemini-2.5-flash", contents=messages,
-)
-
-usage = response.usage_metadata
-if usage is None:
-    raise RuntimeError("There is no usage metadata")
-else:
-    prompt_tokens = usage.prompt_token_count
-    response_tokens = usage.candidates_token_count
-
-
-if args.verbose:
-    print(f"User prompt: {user_prompt}") 
-    print(f"Prompt tokens: {prompt_tokens}")
-    print(f"Response tokens: {response_tokens}")
-
-else:
+def print_response(response, prompt_tokens, response_tokens, verbose: bool):
+    if verbose:
+        print(f"Prompt tokens: {prompt_tokens}")
+        print(f"Response tokens: {response_tokens}")
     print(response.text)
+
+
+def main():
+    load_dotenv()
+    api_key = os.environ.get("GEMINI_API_KEY")
+
+    if api_key is None:
+        raise RuntimeError("There is no API key")
+
+    client = genai.Client(api_key=api_key)
+
+    parser = argparse.ArgumentParser(description="Chatbot")
+    parser.add_argument("user_prompt", type=str, help="User prompt")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
+    args = parser.parse_args()
+
+    user_prompt = args.user_prompt
+
+    messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=messages,
+        config=types.GenerateContentConfig(
+            system_instruction=system_prompt
+        ),
+    )
+
+    usage = response.usage_metadata
+    if usage is None:
+        raise RuntimeError("There is no usage metadata")
+    else:
+        prompt_tokens = usage.prompt_token_count
+        response_tokens = usage.candidates_token_count
+
+    if args.verbose:
+        print(f"User prompt: {user_prompt}")
+
+    print_response(response, prompt_tokens, response_tokens, args.verbose)
+
+
+if __name__ == "__main__":
+    main()

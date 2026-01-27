@@ -1,4 +1,6 @@
 import os.path
+import subprocess
+
 
 
 def run_python_file(working_directory, file_path, args=None):
@@ -25,24 +27,35 @@ def run_python_file(working_directory, file_path, args=None):
         if os.path.isdir(target_file_path):
             return f'Error: Cannot write to "{file_path}" as it is a directory'
         
-           
 
-        print(F"FILE PATH - {file_path}")    
-        print(f"WORKING DIR - {working_dir_abs}")
-        print(F"TARGET FILE PATH - {target_file_path}")
-        print(F"VALID FILE PATH - {valid_file_path}")
-        print(F"PARENT DIR NAME - {parent_dir_name}")
+        command = ["python", target_file_path]
+
+        if args != None:
+            command.extend(args)
+
+        executed_command = subprocess.run(
+            command, 
+            cwd=working_dir_abs,
+            capture_output=True, 
+            timeout=30, text=True
+        )
         
-
-
-        """if os.makedirs(parent_dir_name,exist_ok=True) == None:
-
-            with open(target_file_path, "w") as f:
-                f.write(content)
-                
-                return f'Successfully wrote to "{file_path}" ({len(content)} characters written)'"""
-
+        output_string = []
         
+        if executed_command.returncode != 0:
+            output_string.append(f"Process exited with code {executed_command.returncode}")
+
+        if not executed_command.stdout and not executed_command.stderr:
+            output_string.append("No output produced")
+
+        if executed_command.stdout:
+            output_string.append("STDOUT:\n" + executed_command.stdout)
+
+        if executed_command.stderr:
+            output_string.append("STDERR:\n" + executed_command.stderr)
+
+        return "\n".join(output_string)
+
 
     except Exception as e:
-        return f"Error: {e}"
+        return f"Error: executing Python file: {e}"
